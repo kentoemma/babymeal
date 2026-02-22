@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#4a7c59">
+<title>BabyMeal</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@800;900&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --g:#4a7c59; --gl:#6aab7a; --gp:#e8f5ec; --gm:#c5e4cc;
+  --or:#f4845f; --op:#fde8e0; --ye:#f9c74f;
+  --cr:#faf8f3; --tx:#2d2d2d; --sb:#7a7a7a; --wh:#ffffff;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--cr);color:var(--tx);min-height:100vh}
+#app{max-width:430px;margin:0 auto;min-height:100vh;position:relative}
+
+/* ── Splash ── */
+#splash{position:fixed;inset:0;background:var(--g);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;transition:opacity .5s}
+#splash.hide{opacity:0;pointer-events:none}
+#splash .logo{font-size:72px;animation:bounceIn .6s ease}
+#splash h1{font-family:'Nunito',sans-serif;color:#fff;font-size:34px;font-weight:900;margin-top:8px}
+#splash p{color:rgba(255,255,255,.7);font-size:13px;margin-top:6px}
+
+/* ── Onboarding ── */
+#onboarding{position:fixed;inset:0;background:var(--cr);z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 22px;overflow-y:auto}
+#onboarding.hide{display:none}
+.ob-step{display:none;width:100%;flex-direction:column;align-items:center}
+.ob-step.active{display:flex}
+.ob-icon{font-size:56px;margin-bottom:14px}
+.ob-title{font-size:24px;font-weight:900;color:var(--g);margin-bottom:8px;text-align:center}
+.ob-sub{font-size:14px;color:var(--sb);text-align:center;margin-bottom:22px;line-height:1.6}
+
+/* ── Header ── */
+#header{position:sticky;top:0;z-index:100;background:var(--wh);padding:12px 18px 10px;border-bottom:1px solid var(--gm);display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(74,124,89,.08)}
+.logo{font-family:'Nunito',sans-serif;font-weight:900;font-size:20px;color:var(--g)}
+.stage-badge{background:var(--gp);color:var(--g);font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+
+/* ── Nav ── */
+#nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--wh);border-top:1px solid var(--gm);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;padding:9px 4px 7px;cursor:pointer;border:none;background:none;color:var(--sb);font-size:10px;font-weight:700;gap:2px;font-family:inherit;transition:color .2s}
+.nav-btn .ni{font-size:20px;transition:transform .2s}
+.nav-btn.active{color:var(--g)}
+.nav-btn.active .ni{transform:scale(1.15)}
+
+/* ── Pages ── */
+.page{display:none;padding:14px 14px 90px;animation:fadeUp .25s ease}
+.page.active{display:block}
+
+/* ── Cards ── */
+.card{background:var(--wh);border-radius:18px;padding:18px;box-shadow:0 4px 20px rgba(74,124,89,.1);margin-bottom:14px}
+.card-title{font-size:11px;font-weight:700;color:var(--sb);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px}
+.sec-title{font-size:17px;font-weight:900;margin-bottom:13px}
+
+/* ── Hero ── */
+.hero{background:linear-gradient(135deg,var(--g),var(--gl));border-radius:18px;padding:22px 18px;margin-bottom:14px;color:#fff;position:relative;overflow:hidden}
+.hero::before{content:'🍼';position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:58px;opacity:.18}
+.hero .hdate{font-size:12px;opacity:.75;margin-bottom:4px}
+.hero h2{font-size:19px;font-weight:900;margin-bottom:3px}
+.hero p{font-size:13px;opacity:.82}
+
+/* ── Meal slots ── */
+.slot{border:2px dashed var(--gm);border-radius:12px;padding:13px 14px;margin-bottom:9px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:11px}
+.slot:hover{border-color:var(--g);background:var(--gp)}
+.slot.done{border:2px solid var(--gm);background:var(--gp);cursor:default}
+.slot-icon{font-size:26px}
+.slot-lbl{font-size:11px;color:var(--sb);font-weight:700}
+.slot-name{font-size:14px;font-weight:700}
+.slot-meta{font-size:12px;color:var(--sb);margin-top:2px}
+
+/* ── Buttons ── */
+.btn{width:100%;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:7px}
+.btn-g{background:var(--g);color:#fff}
+.btn-g:hover{background:var(--gl);transform:translateY(-1px)}
+.btn-outline{background:var(--gp);color:var(--g);border:2px solid var(--gm)}
+.btn-outline:hover{background:var(--gm)}
+.btn-danger{background:#fee2e2;color:#991b1b}
+.btn-sm{width:auto;padding:8px 16px;font-size:13px}
+.flex2{display:flex;gap:9px}
+.flex2 .btn{flex:1}
+
+/* ── AI card ── */
+.ai-card{background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:18px;padding:18px;margin-bottom:14px;color:#fff}
+.ai-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);border-radius:20px;padding:3px 11px;font-size:11px;font-weight:700;margin-bottom:12px}
+.ai-pulse{width:6px;height:6px;background:#4ade80;border-radius:50%;animation:pulse 2s infinite;display:inline-block}
+.ai-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:12px;padding:13px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;width:100%;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px}
+.ai-btn:disabled{opacity:.5;cursor:default}
+.dot3 span{width:7px;height:7px;background:var(--gl);border-radius:50%;display:inline-block;animation:bounce 1.2s infinite;margin:0 2px}
+.dot3 span:nth-child(2){animation-delay:.2s}
+.dot3 span:nth-child(3){animation-delay:.4s}
+.proposal-box{background:rgba(255,255,255,.08);border-radius:12px;padding:12px;margin:12px 0}
+.menu-row{display:flex;align-items:flex-start;gap:9px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.menu-row:last-child{border-bottom:none}
+.menu-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+.menu-info{flex:1}
+.menu-name{font-size:14px;font-weight:700}
+.menu-ingredients{font-size:11px;opacity:.7;margin-top:3px;line-height:1.6}
+.tag{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;flex-shrink:0}
+.tag-new{background:rgba(249,199,79,.2);color:var(--ye)}
+.tag-stock{background:rgba(74,222,128,.15);color:#4ade80}
+
+/* ── Nutrition suggestion ── */
+.nutr-suggest{background:rgba(255,255,255,.06);border-radius:12px;padding:12px;margin-top:10px}
+.nutr-suggest-title{font-size:12px;font-weight:700;opacity:.8;margin-bottom:8px}
+.suggest-item{display:flex;align-items:flex-start;gap:7px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.suggest-item:last-child{border-bottom:none}
+.suggest-food{font-size:13px;font-weight:700;flex:1}
+.suggest-amount{font-size:11px;opacity:.65;margin-top:2px}
+
+/* ── Proposal action btns ── */
+.prop-btns{display:flex;gap:8px;margin-top:12px}
+.prop-btn{flex:1;border-radius:10px;padding:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:1px solid rgba(255,255,255,.3)}
+.prop-adopt{background:rgba(74,222,128,.2);color:#4ade80}
+.prop-adopt.done{cursor:default;opacity:.7}
+.prop-retry{background:transparent;color:rgba(255,255,255,.7)}
+
+/* ── Error box ── */
+.err-box{background:rgba(244,132,95,.18);border:1px solid rgba(244,132,95,.5);border-radius:10px;padding:12px;margin-top:12px}
+.err-title{font-size:12px;font-weight:700;color:var(--or);margin-bottom:6px}
+.err-pre{font-size:11px;color:rgba(255,255,255,.7);white-space:pre-wrap;word-break:break-all;font-family:monospace;line-height:1.5}
+
+/* ── Record items ── */
+.day-hd{font-size:12px;font-weight:700;color:var(--sb);margin-bottom:9px;display:flex;align-items:center;gap:7px}
+.day-hd::after{content:'';flex:1;height:1px;background:var(--gm)}
+.rec-item{background:var(--wh);border-radius:12px;padding:13px 14px;margin-bottom:8px;display:flex;align-items:center;gap:11px;box-shadow:0 2px 8px rgba(74,124,89,.07)}
+.rec-thumb{width:50px;height:50px;border-radius:9px;background:var(--gp);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;overflow:hidden}
+.rec-thumb img{width:100%;height:100%;object-fit:cover}
+.rec-name{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rec-meta{font-size:12px;color:var(--sb);margin-top:2px}
+.rbadge{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:700;white-space:nowrap}
+.r-all{background:#dcfce7;color:#15803d}
+.r-half{background:#fef9c3;color:#854d0e}
+.r-no{background:#fee2e2;color:#991b1b}
+
+/* ── Stock grid ── */
+.stock-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
+.stock-item{background:var(--wh);border-radius:12px;padding:13px;box-shadow:0 2px 8px rgba(74,124,89,.07);position:relative}
+.stock-item.warn{border:2px solid var(--or);background:var(--op)}
+.s-del{position:absolute;top:7px;right:7px;background:none;border:none;font-size:14px;cursor:pointer;opacity:.35;line-height:1}
+.s-del:hover{opacity:1}
+.s-emoji{font-size:26px;margin-bottom:7px}
+.s-name{font-size:13px;font-weight:700}
+.s-amt{font-size:12px;color:var(--sb)}
+.s-exp{font-size:11px;font-weight:600;margin-top:5px}
+.s-ok{color:var(--g)}
+.s-warn{color:var(--or)}
+
+/* ── Modal ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;backdrop-filter:blur(4px)}
+.modal-bg.hide{display:none}
+.modal{background:var(--wh);border-radius:22px 22px 0 0;padding:22px 18px 36px;width:100%;max-width:430px;margin:0 auto;max-height:90vh;overflow-y:auto;animation:slideUp .28s ease}
+.modal-handle{width:38px;height:4px;background:var(--gm);border-radius:2px;margin:0 auto 18px}
+.modal h3{font-size:17px;font-weight:900;margin-bottom:18px}
+
+/* ── Forms ── */
+.fg{margin-bottom:14px}
+.fl{font-size:13px;font-weight:700;color:var(--sb);margin-bottom:5px;display:block}
+.fi{width:100%;border:2px solid var(--gm);border-radius:12px;padding:11px 13px;font-size:14px;font-family:inherit;outline:none;background:var(--wh);transition:border-color .2s}
+.fi:focus{border-color:var(--g)}
+.photo-area{border:2px dashed var(--gm);border-radius:12px;padding:20px;text-align:center;cursor:pointer;background:var(--gp);margin-bottom:10px;transition:all .2s}
+.photo-area:hover{border-color:var(--g)}
+.reaction-row{display:flex;gap:7px}
+.ropt{flex:1;padding:9px;border:2px solid var(--gm);border-radius:12px;text-align:center;cursor:pointer;font-size:12px;font-weight:700;transition:all .2s;background:var(--wh)}
+.ropt.sel{border-color:var(--g);background:var(--gp);color:var(--g)}
+.ropt-e{font-size:19px;display:block;margin-bottom:3px}
+
+/* ── Nutr card ── */
+.nutr-card{background:var(--gp);border-radius:10px;padding:14px;margin-top:10px}
+.nutr-row{margin-bottom:9px}
+.nutr-hd{display:flex;justify-content:space-between;margin-bottom:3px;font-size:12px;font-weight:600}
+.nutr-track{height:8px;background:#d1fae5;border-radius:4px;overflow:hidden}
+.nutr-fill{height:100%;border-radius:4px;transition:width 1s ease}
+
+/* ── Settings ── */
+.srow{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--gp)}
+.srow:last-child{border-bottom:none}
+.srow-lbl{font-size:15px;font-weight:700}
+.srow-val{font-size:14px;color:var(--g);font-weight:700}
+.srow-edit{font-size:12px;color:var(--g);cursor:pointer;text-decoration:underline;margin-left:8px}
+.toggle{width:46px;height:25px;background:var(--gm);border-radius:13px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;border:none}
+.toggle.on{background:var(--g)}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:19px;height:19px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 2px 4px rgba(0,0,0,.18)}
+.toggle.on::after{transform:translateX(21px)}
+.atag-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:11px;min-height:28px}
+.atag{background:var(--op);color:var(--or);font-size:12px;font-weight:700;padding:4px 11px;border-radius:20px;display:flex;align-items:center;gap:5px}
+.atag button{background:none;border:none;cursor:pointer;font-size:13px;line-height:1;color:var(--or);padding:0}
+
+/* ── Empty state ── */
+.empty{text-align:center;padding:40px 18px;color:var(--sb)}
+.empty-icon{font-size:46px;margin-bottom:10px}
+
+/* ── Animations ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes bounceIn{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-7px)}}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ── Splash ── -->
+<div id="splash">
+  <div class="logo">🍼</div>
+  <h1>BabyMeal</h1>
+  <p>赤ちゃんの食事を、もっとかんたんに</p>
+</div>
+
+<!-- ── Onboarding ── -->
+<div id="onboarding" class="hide">
+  <div class="ob-step active" id="ob1">
+    <div class="ob-icon">👶</div>
+    <div class="ob-title">はじめまして！</div>
+    <div class="ob-sub">赤ちゃんの情報を教えてください<br>あとから設定で変更できます</div>
+    <div style="width:100%">
+      <div class="fg">
+        <label class="fl">ニックネーム</label>
+        <input class="fi" id="ob-name" placeholder="例：はるくん">
+      </div>
+      <div class="fg">
+        <label class="fl">生年月日（年月）</label>
+        <input type="month" class="fi" id="ob-birth">
+      </div>
+    </div>
+    <button class="btn btn-g" onclick="obNext()">次へ →</button>
+  </div>
+  <div class="ob-step" id="ob2">
+    <div class="ob-icon">⚠️</div>
+    <div class="ob-title">アレルギー食材</div>
+    <div class="ob-sub">除去・未確認の食材があれば入力してください<br>（後から設定で変更できます）</div>
+    <div style="width:100%;margin-bottom:16px">
+      <div class="atag-wrap" id="ob-alls"></div>
+      <div style="display:flex;gap:8px">
+        <input class="fi" id="ob-all-input" placeholder="例：卵、えび" style="flex:1" onkeydown="if(event.key==='Enter')obAddAll()">
+        <button class="btn btn-outline btn-sm" onclick="obAddAll()">追加</button>
+      </div>
+    </div>
+    <button class="btn btn-g" onclick="obFinish()">🎉 はじめる</button>
+    <button class="btn btn-outline" style="margin-top:8px" onclick="obFinish()">スキップ</button>
+  </div>
+</div>
+
+<!-- ── Header ── -->
+<div id="header" style="display:none">
+  <div class="logo">🍼 BabyMeal</div>
+  <div style="text-align:right">
+    <div style="font-size:13px;color:var(--sb)" id="hd-name">👶 —</div>
+    <div class="stage-badge" id="hd-stage">—</div>
+  </div>
+</div>
+
+<!-- ── Pages ── -->
+<div id="pg-home" class="page active">
+  <div class="hero">
+    <div class="hdate" id="today-str"></div>
+    <h2>今日の離乳食 📋</h2>
+    <p>3食の記録と献立をチェックしよう</p>
+  </div>
+  <div class="card">
+    <div class="card-title">今日の食事記録</div>
+    <div id="slots"></div>
+  </div>
+  <!-- AI proposal -->
+  <div class="ai-card">
+    <div class="ai-badge"><span class="ai-pulse"></span>AI提案</div>
+    <div style="font-size:15px;font-weight:900;margin-bottom:10px">次回の献立を提案する</div>
+    <p style="font-size:13px;opacity:.7;margin-bottom:14px;line-height:1.6">直近3食・冷凍ストック・栄養バランスをもとにAIが献立と食材の1回量を提案します</p>
+    <button class="ai-btn" id="propose-btn" onclick="runPropose()">✨ 献立を提案してもらう</button>
+    <div id="propose-result"></div>
+  </div>
+</div>
+
+<div id="pg-record" class="page">
+  <div class="sec-title">📖 食事記録</div>
+  <div id="rec-list"></div>
+  <button class="btn btn-g" onclick="openRecModal()">＋ 食事を記録する</button>
+</div>
+
+<div id="pg-stock" class="page">
+  <div class="sec-title">🧊 冷凍ストック</div>
+  <div class="card" style="padding:12px 16px;margin-bottom:10px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:13px;font-weight:700;color:var(--sb)">現在の在庫</div>
+      <div style="font-size:22px;font-weight:900;color:var(--g)" id="stock-count">0品</div>
+    </div>
+    <div id="stock-warn-msg" style="font-size:12px;color:var(--or);margin-top:4px;display:none"></div>
+  </div>
+  <div class="stock-grid" id="stock-grid"></div>
+  <div id="stock-empty" class="empty" style="display:none">
+    <div class="empty-icon">🧊</div>
+    <p>冷凍ストックがありません</p>
+  </div>
+  <button class="btn btn-g" onclick="openStockModal()">＋ ストックを追加する</button>
+</div>
+
+<div id="pg-settings" class="page">
+  <div class="sec-title">⚙️ 設定</div>
+  <div class="card">
+    <div class="card-title">赤ちゃん情報</div>
+    <div class="srow">
+      <div class="srow-lbl">ニックネーム</div>
+      <div><span class="srow-val" id="s-name">—</span><span class="srow-edit" onclick="editName()">変更</span></div>
+    </div>
+    <div class="srow">
+      <div class="srow-lbl">生年月日</div>
+      <div><span class="srow-val" id="s-birth">—</span><span class="srow-edit" onclick="editBirth()">変更</span></div>
+    </div>
+    <div class="srow">
+      <div class="srow-lbl">ステージ</div>
+      <span class="srow-val" id="s-stage">—</span>
+    </div>
+    <div class="srow" style="border:none">
+      <div class="srow-lbl">月齢</div>
+      <span class="srow-val" id="s-months">—</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">アレルギー・除去食材</div>
+    <div class="atag-wrap" id="s-alls"></div>
+    <div style="display:flex;gap:8px">
+      <input class="fi" id="s-all-input" placeholder="食材名を入力" style="flex:1;font-size:14px;padding:10px 12px" onkeydown="if(event.key==='Enter')sAddAll()">
+      <button class="btn btn-outline btn-sm" onclick="sAddAll()">追加</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">表示設定</div>
+    <div class="srow">
+      <div>
+        <div class="srow-lbl">初食材アラート</div>
+        <div style="font-size:12px;color:var(--sb);margin-top:2px">初めての食材を使う際に表示</div>
+      </div>
+      <button class="toggle" id="tog-first" onclick="togFirst()"></button>
+    </div>
+    <div class="srow" style="border:none">
+      <div>
+        <div class="srow-lbl">冷凍期限アラート</div>
+        <div style="font-size:12px;color:var(--sb);margin-top:2px">期限3日前に警告表示</div>
+      </div>
+      <button class="toggle" id="tog-exp" onclick="togExp()"></button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title" style="color:#991b1b">データ管理</div>
+    <button class="btn btn-danger" onclick="resetData()">🗑 すべてのデータをリセット</button>
+  </div>
+</div>
+
+<!-- ── Bottom Nav ── -->
+<nav id="nav" style="display:none">
+  <button class="nav-btn active" onclick="goPage('home')" id="nb-home"><span class="ni">🏠</span>ホーム</button>
+  <button class="nav-btn" onclick="goPage('record')" id="nb-record"><span class="ni">📖</span>記録</button>
+  <button class="nav-btn" onclick="goPage('stock')" id="nb-stock"><span class="ni">🧊</span>冷凍</button>
+  <button class="nav-btn" onclick="goPage('settings')" id="nb-settings"><span class="ni">⚙️</span>設定</button>
+</nav>
+
+<!-- ── Record Modal ── -->
+<div class="modal-bg hide" id="rec-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3>食事を記録する</h3>
+    <div class="fg">
+      <label class="fl">📸 写真（AI栄養解析）</label>
+      <div class="photo-area" id="photo-area" onclick="document.getElementById('photo-input').click()">
+        <div style="font-size:32px;margin-bottom:6px">📷</div>
+        <p style="font-size:13px;color:var(--sb)">タップして写真を選ぶ<br><span style="font-size:11px;color:var(--g)">AIが食材・栄養を自動解析します</span></p>
+      </div>
+      <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhoto(event)">
+      <div id="vision-result"></div>
+    </div>
+    <div class="fg">
+      <label class="fl">🕐 食事の時間帯</label>
+      <select class="fi" id="rec-time">
+        <option value="朝ごはん">🌅 朝ごはん</option>
+        <option value="ひるごはん">☀️ ひるごはん</option>
+        <option value="晩ごはん">🌙 晩ごはん</option>
+        <option value="おやつ">🍪 おやつ</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label class="fl">🍽 料理名</label>
+      <input class="fi" id="rec-name" placeholder="例：かぼちゃペースト・豆腐">
+    </div>
+    <div class="fg">
+      <label class="fl">😊 食べた量・反応</label>
+      <div class="reaction-row">
+        <div class="ropt sel" onclick="selReact('all')" id="r-all"><span class="ropt-e">😊</span>完食</div>
+        <div class="ropt" onclick="selReact('half')" id="r-half"><span class="ropt-e">😐</span>少し残した</div>
+        <div class="ropt" onclick="selReact('no')" id="r-no"><span class="ropt-e">😣</span>食べなかった</div>
+      </div>
+    </div>
+    <div class="flex2">
+      <button class="btn btn-outline" onclick="closeRecModal()">キャンセル</button>
+      <button class="btn btn-g" onclick="saveRecord()">💾 保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Stock Modal ── -->
+<div class="modal-bg hide" id="stock-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3>🧊 ストックを追加</h3>
+    <div class="fg">
+      <label class="fl">絵文字アイコン（任意）</label>
+      <input class="fi" id="s-emoji" placeholder="例：🎃" maxlength="2">
+    </div>
+    <div class="fg">
+      <label class="fl">料理名 <span style="color:var(--or)">*</span></label>
+      <input class="fi" id="s-sname" placeholder="例：かぼちゃペースト">
+    </div>
+    <div class="fg">
+      <label class="fl">量</label>
+      <input class="fi" id="s-amt" placeholder="例：製氷皿5マス">
+    </div>
+    <div class="fg">
+      <label class="fl">調理日 <span style="color:var(--or)">*</span></label>
+      <input type="date" class="fi" id="s-date">
+    </div>
+    <div class="flex2">
+      <button class="btn btn-outline" onclick="closeStockModal()">キャンセル</button>
+      <button class="btn btn-g" onclick="saveStock()">追加する</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- #app -->
+
+<script>
+// ─────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────
+const DB = {
+  get(k)    { try { return JSON.parse(localStorage.getItem('bm_'+k)); } catch { return null; } },
+  set(k,v)  { localStorage.setItem('bm_'+k, JSON.stringify(v)); },
+};
+
+let baby     = DB.get('baby')     || null;
+let allergens= DB.get('alls')     || [];
+let records  = DB.get('recs')     || [];
+let stocks   = DB.get('stocks')   || [];
+let toggles  = DB.get('toggles') || { firstFood:true, expiry:true };
+
+function save() {
+  DB.set('baby',    baby);
+  DB.set('alls',    allergens);
+  DB.set('recs',    records);
+  DB.set('stocks',  stocks);
+  DB.set('toggles', toggles);
+}
+
+// ─────────────────────────────────────────
+// STAGE CALC
+// ─────────────────────────────────────────
+function calcStage(birth) {
+  if (!birth) return { stage:'—', months:0 };
+  const now = new Date();
+  const b   = new Date(birth + '-01');
+  const m   = (now.getFullYear()-b.getFullYear())*12 + now.getMonth()-b.getMonth();
+  const s   = m<5?'まだ離乳食前':m<=6?'ごっくん期':m<=8?'もぐもぐ期':m<=11?'かみかみ期':m<=18?'ぱくぱく期':'幼児食期';
+  return { stage:s, months:m };
+}
+
+// ─────────────────────────────────────────
+// API HELPERS (→ Vercel functions)
+// ─────────────────────────────────────────
+async function apiChat(messages) {
+  const res  = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify({ messages }),
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error);
+  return data.text;
+}
+
+async function apiVision(base64, mediaType) {
+  const res  = await fetch('/api/vision', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify({ base64, mediaType }),
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error);
+  return data.text;
+}
+
+function parseJSON(raw) {
+  return JSON.parse(raw.replace(/```json\s*/g,'').replace(/```\s*/g,'').trim());
+}
+
+// ─────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────
+window.onload = () => {
+  setTimeout(() => {
+    document.getElementById('splash').classList.add('hide');
+    if (!baby) {
+      document.getElementById('onboarding').classList.remove('hide');
+    } else {
+      showApp();
+    }
+  }, 1400);
+};
+
+function showApp() {
+  document.getElementById('onboarding').classList.add('hide');
+  document.getElementById('header').style.display = 'flex';
+  document.getElementById('nav').style.display = 'flex';
+  renderAll();
+}
+
+function renderAll() {
+  renderHeader();
+  renderSlots();
+  renderRecords();
+  renderStocks();
+  renderSettings();
+
+  // Today string
+  const now = new Date();
+  document.getElementById('today-str').textContent =
+    `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日（${'日月火水木金土'[now.getDay()]}）`;
+}
+
+// ─────────────────────────────────────────
+// HEADER
+// ─────────────────────────────────────────
+function renderHeader() {
+  const { stage, months } = calcStage(baby?.birth);
+  document.getElementById('hd-name').textContent  = `👶 ${baby?.name||'—'}`;
+  document.getElementById('hd-stage').textContent = `${stage}（${months}ヶ月）`;
+}
+
+// ─────────────────────────────────────────
+// ONBOARDING
+// ─────────────────────────────────────────
+function obNext() {
+  const name  = document.getElementById('ob-name').value.trim();
+  const birth = document.getElementById('ob-birth').value;
+  if (!name)  { alert('ニックネームを入力してください'); return; }
+  if (!birth) { alert('生年月日を入力してください'); return; }
+  document.getElementById('ob1').classList.remove('active');
+  document.getElementById('ob2').classList.add('active');
+}
+
+let obAlls = [];
+function obAddAll() {
+  const v = document.getElementById('ob-all-input').value.trim();
+  if (!v) return;
+  obAlls.push(v);
+  document.getElementById('ob-all-input').value = '';
+  renderObAlls();
+}
+function renderObAlls() {
+  document.getElementById('ob-alls').innerHTML =
+    obAlls.map((a,i)=>`<div class="atag">${a}<button onclick="obAlls.splice(${i},1);renderObAlls()">×</button></div>`).join('') ||
+    '<span style="font-size:13px;color:var(--sb)">まだ登録なし</span>';
+}
+
+function obFinish() {
+  baby = {
+    name:  document.getElementById('ob-name').value.trim(),
+    birth: document.getElementById('ob-birth').value,
+  };
+  allergens = [...obAlls];
+  save();
+  showApp();
+}
+
+// ─────────────────────────────────────────
+// PAGE NAV
+// ─────────────────────────────────────────
+function goPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('pg-'+id).classList.add('active');
+  document.getElementById('nb-'+id).classList.add('active');
+}
+
+// ─────────────────────────────────────────
+// HOME: SLOTS
+// ─────────────────────────────────────────
+const SLOTS_DEF = [
+  { label:'朝ごはん', icon:'🌅' },
+  { label:'ひるごはん', icon:'☀️' },
+  { label:'晩ごはん', icon:'🌙' },
+];
+
+function renderSlots() {
+  const today = new Date().toISOString().slice(0,10);
+  const html  = SLOTS_DEF.map(sl => {
+    const rec = records.find(r => r.date===today && r.time===sl.label);
+    if (rec) {
+      const emoji = { all:'完食 😊', half:'少し残した 😐', no:'食べなかった 😣' }[rec.reaction];
+      return `<div class="slot done">
+        <div class="slot-icon">${sl.icon}</div>
+        <div><div class="slot-lbl">${sl.label}</div><div class="slot-name">${rec.name}</div><div class="slot-meta">${emoji}</div></div>
+        <div>✅</div>
+      </div>`;
+    }
+    return `<div class="slot" onclick="openRecModal('${sl.label}')">
+      <div class="slot-icon">${sl.icon}</div>
+      <div style="flex:1"><div class="slot-lbl">${sl.label}</div><div class="slot-name" style="font-weight:400;color:var(--sb)">タップして記録する</div></div>
+      <div style="color:var(--sb)">＋</div>
+    </div>`;
+  }).join('');
+  document.getElementById('slots').innerHTML = html;
+}
+
+// ─────────────────────────────────────────
+// AI PROPOSAL
+// ─────────────────────────────────────────
+let proposeAdopted = false;
+
+async function runPropose() {
+  const btn = document.getElementById('propose-btn');
+  btn.disabled = true;
+  btn.textContent = '考え中...';
+  proposeAdopted  = false;
+  document.getElementById('propose-result').innerHTML =
+    `<div style="display:flex;align-items:center;gap:10px;padding-top:14px">
+      <div class="dot3"><span></span><span></span><span></span></div>
+      <span style="font-size:13px;opacity:.7">直近3食を分析しています...</span>
+    </div>`;
+
+  const { stage, months } = calcStage(baby?.birth);
+  const recent    = records.slice(-3);
+  const recentTxt = recent.length
+    ? recent.map(r=>`・${r.time}：${r.name}（${{all:'完食',half:'少し残した',no:'食べなかった'}[r.reaction]}）`).join('\n')
+    : '・記録なし';
+  const stockTxt  = stocks.length ? stocks.map(s=>s.name).join('、') : 'なし';
+
+  try {
+    const raw = await apiChat([{
+      role: 'user',
+      content:
+        `あなたは離乳食の管理栄養士です。\n` +
+        `月齢:${months}ヶ月(${stage})\n` +
+        `直近3食:\n${recentTxt}\n` +
+        `冷凍ストック:${stockTxt}\n\n` +
+        `以下のルールで次の食事の献立を提案してください：\n` +
+        `- 冷凍ストックを優先して使う\n` +
+        `- 新メニューは1品のみ\n` +
+        `- 各メニューに必要な食材と月齢に合った1回量の目安を記載\n` +
+        `- 直近3食で不足している栄養素を補う食材も提案\n\n` +
+        `JSONのみ返してください（マークダウン不要）：\n` +
+        `{"analysis":"栄養分析25字以内","menu":[{"icon":"絵文字","name":"料理名","type":"stock または new","ingredients":[{"name":"食材名","amount":"1回量の目安（例：小さじ1）"}]}],"warning":"初食材注意またはnull","nutritionSuggestion":{"missing":"不足栄養素（例：鉄分・カルシウム）","foods":[{"icon":"絵文字","name":"食材名","amount":"1回量目安","reason":"補える理由10字以内"}]}}`
+    }]);
+    renderProposal(parseJSON(raw));
+  } catch(e) {
+    document.getElementById('propose-result').innerHTML =
+      `<div class="err-box">
+        <div class="err-title">❌ エラー詳細</div>
+        <div class="err-pre">${e.message}</div>
+        <button class="ai-btn" style="margin-top:10px;padding:8px 0;font-size:12px" onclick="runPropose()">🔄 再試行</button>
+      </div>`;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '✨ 献立を提案してもらう';
+  }
+}
+
+function renderProposal(d) {
+  const menu = (d.menu||[]).map(m => {
+    const ingredients = (m.ingredients||[]).map(i=>`${i.name} ${i.amount}`).join('・');
+    return `<div class="menu-row">
+      <div class="menu-icon">${m.icon}</div>
+      <div class="menu-info">
+        <div class="menu-name">${m.name}</div>
+        ${ingredients ? `<div class="menu-ingredients">食材：${ingredients}</div>` : ''}
+      </div>
+      <span class="tag ${m.type==='new'?'tag-new':'tag-stock'}">${m.type==='new'?'新メニュー':'冷凍ストック'}</span>
+    </div>`;
+  }).join('');
+
+  const ns = d.nutritionSuggestion;
+  let nutrSuggestHtml = '';
+  if (ns && ns.foods && ns.foods.length) {
+    const items = ns.foods.map(f=>
+      `<div class="suggest-item">
+        <span style="font-size:18px;flex-shrink:0">${f.icon}</span>
+        <div>
+          <div class="suggest-food">${f.name}</div>
+          <div class="suggest-amount">1回量：${f.amount}　${f.reason}</div>
+        </div>
+      </div>`
+    ).join('');
+    nutrSuggestHtml = `
+      <div class="nutr-suggest">
+        <div class="nutr-suggest-title">🔋 不足栄養素（${ns.missing}）を補う食材</div>
+        ${items}
+      </div>`;
+  }
+
+  const warn = d.warning && d.warning!=='null'
+    ? `<div style="font-size:12px;opacity:.8;margin-bottom:8px">⚠ ${d.warning}</div>` : '';
+
+  document.getElementById('propose-result').innerHTML = `
+    <div style="margin-top:14px">
+      <div style="font-size:13px;opacity:.75;margin-bottom:10px">📊 ${d.analysis}</div>
+      <div class="proposal-box">${menu}</div>
+      ${warn}
+      ${nutrSuggestHtml}
+      <div class="prop-btns">
+        <button class="prop-btn prop-adopt" id="adopt-btn" onclick="adoptProposal()">✅ この献立を使う</button>
+        <button class="prop-btn prop-retry" onclick="runPropose()">🔄 別の提案</button>
+      </div>
+    </div>`;
+}
+
+function adoptProposal() {
+  const btn = document.getElementById('adopt-btn');
+  if (btn) { btn.textContent='✅ 採用済み'; btn.disabled=true; btn.classList.add('done'); }
+}
+
+// ─────────────────────────────────────────
+// RECORD MODAL
+// ─────────────────────────────────────────
+let recReaction = 'all';
+let recPhoto    = null;
+
+function openRecModal(preset) {
+  recReaction = 'all';
+  recPhoto    = null;
+  document.getElementById('rec-name').value = '';
+  document.getElementById('photo-area').innerHTML =
+    '<div style="font-size:32px;margin-bottom:6px">📷</div><p style="font-size:13px;color:var(--sb)">タップして写真を選ぶ<br><span style="font-size:11px;color:var(--g)">AIが食材・栄養を自動解析します</span></p>';
+  document.getElementById('vision-result').innerHTML = '';
+  document.getElementById('photo-input').value = '';
+  ['all','half','no'].forEach(v => {
+    document.getElementById('r-'+v).classList.toggle('sel', v==='all');
+  });
+  if (preset) document.getElementById('rec-time').value = preset;
+  document.getElementById('rec-modal').classList.remove('hide');
+}
+
+function closeRecModal() {
+  document.getElementById('rec-modal').classList.add('hide');
+}
+
+function selReact(v) {
+  recReaction = v;
+  ['all','half','no'].forEach(r => document.getElementById('r-'+r).classList.toggle('sel', r===v));
+}
+
+async function handlePhoto(e) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async ev => {
+    const url   = ev.target.result;
+    const b64   = url.split(',')[1];
+    const mtype = url.match(/data:([^;]+)/)[1];
+    recPhoto    = url;
+    document.getElementById('photo-area').innerHTML =
+      `<img src="${url}" style="width:90px;height:90px;object-fit:cover;border-radius:10px">`;
+    document.getElementById('vision-result').innerHTML =
+      `<div style="background:var(--gp);border-radius:10px;padding:12px;display:flex;align-items:center;gap:9px;margin-top:8px">
+        <div class="dot3"><span></span><span></span><span></span></div>
+        <span style="font-size:13px;color:var(--g);font-weight:700">AIが写真を解析中...</span>
+      </div>`;
+    try {
+      const raw  = await apiVision(b64, mtype);
+      const json = parseJSON(raw);
+      if (json.dishName && !document.getElementById('rec-name').value) {
+        document.getElementById('rec-name').value = json.dishName;
+      }
+      renderNutrCard(json);
+    } catch(e) {
+      document.getElementById('vision-result').innerHTML =
+        `<div style="background:var(--op);border-radius:10px;padding:12px;margin-top:8px">
+          <div style="font-size:12px;font-weight:700;color:var(--or);margin-bottom:6px">❌ 写真解析エラー</div>
+          <pre style="font-size:11px;color:var(--sb);white-space:pre-wrap;word-break:break-all;font-family:monospace">${e.message}</pre>
+          <div style="font-size:11px;color:var(--sb);margin-top:6px">料理名を手動で入力してください。</div>
+        </div>`;
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderNutrCard(n) {
+  const items = [
+    ['タンパク質', n.nutrition?.protein],
+    ['鉄分',       n.nutrition?.iron],
+    ['炭水化物',   n.nutrition?.carbs],
+    ['カルシウム', n.nutrition?.calcium],
+  ];
+  const col = v => v>=60?'var(--g)':v>=40?'#d97706':'var(--or)';
+  const lbl = v => v>=60?'良好':v>=40?'普通':'やや不足';
+  const bars = items.map(([l,v])=>`
+    <div class="nutr-row">
+      <div class="nutr-hd"><span>${l}</span><span style="color:var(--sb)">${lbl(v??0)}</span></div>
+      <div class="nutr-track"><div class="nutr-fill" style="width:${v??0}%;background:linear-gradient(90deg,${col(v??0)},${col(v??0)}bb)"></div></div>
+    </div>`).join('');
+
+  const missing = (n.missingNutrients||[]).join('・');
+  document.getElementById('vision-result').innerHTML = `
+    <div class="nutr-card" style="margin-top:10px">
+      <div style="font-size:12px;font-weight:700;color:var(--g);margin-bottom:10px">🔍 AI栄養解析結果</div>
+      ${bars}
+      ${missing ? `<div style="font-size:12px;color:var(--or);margin-top:6px">⚠ 不足が気になる栄養素：${missing}</div>` : ''}
+      <div style="font-size:12px;color:var(--or);margin-top:8px">💡 ${n.advice}</div>
+      <div style="font-size:10px;color:var(--sb);margin-top:3px">※AIによる推定値です。医療的判断には使用しないでください。</div>
+    </div>`;
+}
+
+function saveRecord() {
+  const name = document.getElementById('rec-name').value.trim();
+  if (!name) { alert('料理名を入力してください'); return; }
+  const time = document.getElementById('rec-time').value;
+  const date = new Date().toISOString().slice(0,10);
+  records.push({ id:Date.now(), date, time, name, reaction:recReaction, photo:recPhoto });
+  save();
+  closeRecModal();
+  renderSlots();
+  renderRecords();
+}
+
+// ─────────────────────────────────────────
+// RECORDS PAGE
+// ─────────────────────────────────────────
+function renderRecords() {
+  const today = new Date().toISOString().slice(0,10);
+  const yest  = new Date(); yest.setDate(yest.getDate()-1);
+  const yestS = yest.toISOString().slice(0,10);
+  const RLBL  = { all:'完食', half:'少し残した', no:'食べなかった' };
+  const RCLS  = { all:'r-all', half:'r-half', no:'r-no' };
+  const TICON = { 朝ごはん:'🌅', ひるごはん:'☀️', 晩ごはん:'🌙', おやつ:'🍪' };
+
+  if (!records.length) {
+    document.getElementById('rec-list').innerHTML =
+      '<div class="empty"><div class="empty-icon">📖</div><p>まだ記録がありません</p></div>';
+    return;
+  }
+
+  const groups = {};
+  [...records].reverse().forEach(r => {
+    if (!groups[r.date]) groups[r.date] = [];
+    groups[r.date].push(r);
+  });
+
+  document.getElementById('rec-list').innerHTML = Object.entries(groups).map(([date,recs]) =>
+    `<div style="margin-bottom:18px">
+      <div class="day-hd">${date===today?'今日':date===yestS?'昨日':date}</div>
+      ${recs.map(r=>`
+        <div class="rec-item">
+          <div class="rec-thumb">${r.photo?`<img src="${r.photo}" alt="">`:TICON[r.time]||'🍽'}</div>
+          <div style="flex:1;min-width:0">
+            <div class="rec-name">${r.name}</div>
+            <div class="rec-meta">${TICON[r.time]||'🍽'} ${r.time}</div>
+          </div>
+          <div class="rbadge ${RCLS[r.reaction]}">${RLBL[r.reaction]}</div>
+        </div>`).join('')}
+    </div>`
+  ).join('');
+}
+
+// ─────────────────────────────────────────
+// STOCK
+// ─────────────────────────────────────────
+function openStockModal() {
+  document.getElementById('s-emoji').value = '';
+  document.getElementById('s-sname').value = '';
+  document.getElementById('s-amt').value   = '';
+  document.getElementById('s-date').value  = new Date().toISOString().slice(0,10);
+  document.getElementById('stock-modal').classList.remove('hide');
+}
+function closeStockModal() {
+  document.getElementById('stock-modal').classList.add('hide');
+}
+function saveStock() {
+  const name = document.getElementById('s-sname').value.trim();
+  if (!name) { alert('料理名を入力してください'); return; }
+  stocks.push({
+    id:    Date.now(),
+    emoji: document.getElementById('s-emoji').value.trim() || '🍱',
+    name,
+    amount:document.getElementById('s-amt').value.trim()   || '—',
+    date:  document.getElementById('s-date').value,
+  });
+  save();
+  closeStockModal();
+  renderStocks();
+}
+
+function renderStocks() {
+  const now = new Date();
+  document.getElementById('stock-count').textContent = stocks.length + '品';
+
+  const warns = stocks.filter(s => {
+    const e = new Date(s.date); e.setDate(e.getDate()+14);
+    return Math.ceil((e-now)/86400000) <= 3;
+  }).length;
+  const warnMsg = document.getElementById('stock-warn-msg');
+  if (warns > 0 && toggles.expiry) {
+    warnMsg.style.display = 'block';
+    warnMsg.textContent   = `⚠ ${warns}品が今週中に期限切れです`;
+  } else {
+    warnMsg.style.display = 'none';
+  }
+
+  if (!stocks.length) {
+    document.getElementById('stock-grid').innerHTML  = '';
+    document.getElementById('stock-empty').style.display = 'block';
+    return;
+  }
+  document.getElementById('stock-empty').style.display = 'none';
+
+  document.getElementById('stock-grid').innerHTML = stocks.map((s,i) => {
+    const exp  = new Date(s.date); exp.setDate(exp.getDate()+14);
+    const days = Math.ceil((exp-now)/86400000);
+    const warn = toggles.expiry && days <= 3;
+    return `<div class="stock-item${warn?' warn':''}">
+      <button class="s-del" onclick="delStock(${i})">✕</button>
+      <div class="s-emoji">${s.emoji}</div>
+      <div class="s-name">${s.name}</div>
+      <div class="s-amt">${s.amount}</div>
+      <div class="s-exp ${warn?'s-warn':'s-ok'}">${warn?`⚠ ${days}日後に期限`:`✅ あと${days}日`}</div>
+    </div>`;
+  }).join('');
+}
+
+function delStock(i) {
+  if (!confirm('このストックを削除しますか？')) return;
+  stocks.splice(i, 1);
+  save();
+  renderStocks();
+}
+
+// ─────────────────────────────────────────
+// SETTINGS
+// ─────────────────────────────────────────
+function renderSettings() {
+  const { stage, months } = calcStage(baby?.birth);
+  const birthDisp = baby?.birth ? (() => {
+    const d = new Date(baby.birth+'-01');
+    return `${d.getFullYear()}年${d.getMonth()+1}月`;
+  })() : '—';
+  document.getElementById('s-name').textContent   = baby?.name || '—';
+  document.getElementById('s-birth').textContent  = birthDisp;
+  document.getElementById('s-stage').textContent  = stage;
+  document.getElementById('s-months').textContent = months + 'ヶ月';
+  document.getElementById('tog-first').classList.toggle('on', toggles.firstFood);
+  document.getElementById('tog-exp').classList.toggle('on',   toggles.expiry);
+  renderSAlls();
+}
+
+function renderSAlls() {
+  document.getElementById('s-alls').innerHTML =
+    allergens.map((a,i)=>`<div class="atag">${a}<button onclick="delAll(${i})">×</button></div>`).join('') ||
+    '<span style="font-size:13px;color:var(--sb)">登録なし</span>';
+}
+function sAddAll() {
+  const v = document.getElementById('s-all-input').value.trim();
+  if (!v) return;
+  allergens.push(v);
+  document.getElementById('s-all-input').value = '';
+  save(); renderSAlls();
+}
+function delAll(i) {
+  allergens.splice(i,1); save(); renderSAlls();
+}
+function editName() {
+  const v = prompt('ニックネームを変更してください', baby?.name||'');
+  if (v===null) return;
+  if (!v.trim()) { alert('入力してください'); return; }
+  baby.name = v.trim(); save(); renderHeader(); renderSettings();
+}
+function editBirth() {
+  const v = prompt('生年月日を変更してください（例: 2024-07）', baby?.birth||'');
+  if (v===null) return;
+  if (!/^\d{4}-\d{2}$/.test(v)) { alert('形式: 2024-07'); return; }
+  baby.birth = v; save(); renderHeader(); renderSettings();
+}
+function togFirst() {
+  toggles.firstFood = !toggles.firstFood; save();
+  document.getElementById('tog-first').classList.toggle('on', toggles.firstFood);
+}
+function togExp() {
+  toggles.expiry = !toggles.expiry; save();
+  document.getElementById('tog-exp').classList.toggle('on', toggles.expiry);
+  renderStocks();
+}
+function resetData() {
+  if (!confirm('すべてのデータを削除します。\nこの操作は元に戻せません。よろしいですか？')) return;
+  ['baby','alls','recs','stocks','toggles'].forEach(k => localStorage.removeItem('bm_'+k));
+  location.reload();
+}
+
+// ── Close modals on bg click ──
+document.getElementById('rec-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeRecModal();
+});
+document.getElementById('stock-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeStockModal();
+});
+</script>
+</body>
+</html>
