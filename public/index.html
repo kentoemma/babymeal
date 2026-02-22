@@ -383,6 +383,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--cr);color:var(--tx);
     <div class="fg">
       <label class="fl">🍽 料理名</label>
       <input class="fi" id="rec-name" placeholder="例：かぼちゃペースト・豆腐">
+      <button class="btn btn-outline" style="margin-top:8px;font-size:13px;padding:9px" onclick="reanalyze()">🔄 この内容で栄養を再解析する</button>
     </div>
     <div class="fg">
       <label class="fl">😊 食べた量・反応</label>
@@ -807,6 +808,50 @@ function renderNutrCard(n) {
       <div style="font-size:12px;color:var(--or);margin-top:8px">💡 ${n.advice}</div>
       <div style="font-size:10px;color:var(--sb);margin-top:3px">※AIによる推定値です。医療的判断には使用しないでください。</div>
     </div>`;
+}
+
+async function reanalyze() {
+  const name = document.getElementById('rec-name').value.trim();
+  if (!name) { alert('料理名を入力してください'); return; }
+  document.getElementById('vision-result').innerHTML =
+    `<div style="background:var(--gp);border-radius:10px;padding:12px;display:flex;align-items:center;gap:9px;margin-top:8px">
+      <div class="dot3"><span></span><span></span><span></span></div>
+      <span style="font-size:13px;color:var(--g);font-weight:700">「${name}」を再解析中...</span>
+    </div>`;
+  try {
+    let raw;
+    if (recPhoto) {
+      // 写真＋料理名で再解析
+      const b64   = recPhoto.split(',')[1];
+      const mtype = recPhoto.match(/data:([^;]+)/)[1];
+      const res   = await fetch('/api/vision', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ base64: b64, mediaType: mtype, dishName: name }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      raw = data.text;
+    } else {
+      // 料理名のみで解析
+      raw = await apiChat([{
+        role: 'user',
+        content:
+          `離乳食「${name}」の栄養を推定してください。
+` +
+          'JSONのみ返してください（マークダウン不要）：
+' +
+          '{dishName:料理名,nutrition:{protein:0-100の整数,iron:0-100の整数,carbs:0-100の整数,calcium:0-100の整数},advice:次の食事へのアドバイス25字以内,missingNutrients:[不足栄養素1,不足栄養素2]}'
+      }]);
+    }
+    renderNutrCard(parseJSON(raw));
+  } catch(e) {
+    document.getElementById('vision-result').innerHTML =
+      `<div style="background:var(--op);border-radius:10px;padding:12px;margin-top:8px">
+        <div style="font-size:12px;font-weight:700;color:var(--or);margin-bottom:6px">❌ 再解析エラー</div>
+        <pre style="font-size:11px;color:var(--sb);white-space:pre-wrap;word-break:break-all;font-family:monospace">${e.message}</pre>
+      </div>`;
+  }
 }
 
 function saveRecord() {
