@@ -18,7 +18,7 @@ export default async function handler(req, res) {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-5",
+        model: "claude-sonnet-4-5-20251001",
         max_tokens: 1000,
         messages: [{
           role: "user",
@@ -29,10 +29,7 @@ export default async function handler(req, res) {
             },
             {
               type: "text",
-              text:
-                "この離乳食の写真を解析してください。\n" +
-                "JSONのみ返してください（マークダウン不要）：\n" +
-                '{"dishName":"料理名","nutrition":{"protein":0-100の整数,"iron":0-100の整数,"carbs":0-100の整数,"calcium":0-100の整数},"advice":"次の食事へのアドバイス25字以内","missingNutrients":["不足栄養素1","不足栄養素2"]}',
+              text: "この離乳食の写真を解析してください。\nJSONのみ返してください（マークダウン・コードブロック不要）：\n{\"dishName\":\"料理名\",\"nutrition\":{\"protein\":整数0-100,\"iron\":整数0-100,\"carbs\":整数0-100,\"calcium\":整数0-100},\"advice\":\"アドバイス25字以内\",\"missingNutrients\":[\"栄養素1\",\"栄養素2\"]}",
             },
           ],
         }],
@@ -40,14 +37,20 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
+
+    // APIエラーの場合は詳細を返す
     if (data.error) {
-      return res.status(400).json({ error: data.error.message });
+      return res.status(400).json({ error: data.error.message || JSON.stringify(data.error) });
     }
 
     const text = (data.content || [])
       .map(b => (b.type === "text" ? b.text : ""))
       .filter(Boolean)
       .join("\n");
+
+    if (!text) {
+      return res.status(500).json({ error: "AIから応答がありませんでした: " + JSON.stringify(data) });
+    }
 
     return res.status(200).json({ text });
   } catch (e) {
